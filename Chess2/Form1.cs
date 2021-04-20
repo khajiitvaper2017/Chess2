@@ -364,6 +364,11 @@ namespace Chess2
             panel1.Visible = cbDice.Checked;
         }
 
+        private void cbEval_CheckedChanged(object sender, EventArgs e)
+        {
+            label1.Visible = cbEval.Checked;
+        }
+
         private void textBox3_Layout(object sender, LayoutEventArgs e)
         {
             textBox3.Focus();

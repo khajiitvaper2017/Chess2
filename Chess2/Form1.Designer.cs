@@ -221,6 +221,7 @@ namespace Chess2
             this.cbEval.TabIndex = 16;
             this.cbEval.Text = "Оценка";
             this.cbEval.UseVisualStyleBackColor = true;
+            this.cbEval.CheckedChanged += new System.EventHandler(this.cbEval_CheckedChanged);
             // 
             // Form1
             // 
