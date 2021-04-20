@@ -2,19 +2,21 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static Chess2.Chess;
+
 namespace Chess2
 {
     public partial class Form1 : Form
     {
         private Bitmap boardBitmap;
-        private Graphics g;
-        private Random random;
         private string Console, Moves;
+        private Graphics g;
+
+        private int moveid = 1;
+        private Random random;
+
         public Form1()
         {
             InitializeComponent();
@@ -26,7 +28,7 @@ namespace Chess2
             EngineName = "sf13.exe";
             ChessAppDir = Environment.CurrentDirectory;
             ChessGUIName = Process.GetCurrentProcess().MainModule?.FileName;
-            ProcessStartInfo psi = new ProcessStartInfo()
+            var psi = new ProcessStartInfo
             {
                 WindowStyle = ProcessWindowStyle.Hidden,
                 FileName = EngineName,
@@ -34,15 +36,14 @@ namespace Chess2
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true
-
             };
-            
+
             EngineProcess = Process.Start(psi);
             EngineProcess.BeginOutputReadLine();
             EngineProcess.OutputDataReceived += Output;
 
             cellSize = pb1.Width / 8;
-            boardBitmap = new Bitmap(pb1.Width,pb1.Height);
+            boardBitmap = new Bitmap(pb1.Width, pb1.Height);
             pb1.Image = new Bitmap(pb1.Width, pb1.Height);
             g = Graphics.FromImage(pb1.Image);
             g.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -51,28 +52,29 @@ namespace Chess2
                 for (var x = 0; x < 8; x++)
                 for (var y = 0; y < 8; y++)
                 {
-                    g.FillRectangle((x + y) % 2 == 0 ? Brushes.White : Brushes.MediumSeaGreen, new Rectangle(x * cellSize, y * cellSize, cellSize, cellSize));
-                    char letter = (char)(x + 97);
-                    string drawString = letter + (7-y+1).ToString();
+                    g.FillRectangle((x + y) % 2 == 0 ? Brushes.White : Brushes.MediumSeaGreen,
+                        new Rectangle(x * cellSize, y * cellSize, cellSize, cellSize));
+                    var letter = (char) (x + 97);
+                    var drawString = letter + (7 - y + 1).ToString();
 
                     // Create font and brush.
-                    Font drawFont = new Font("Arial", 10);
-                    SolidBrush drawBrush = new SolidBrush(Color.Black);
+                    var drawFont = new Font("Arial", 10);
+                    var drawBrush = new SolidBrush(Color.Black);
 
 
                     // Set format of string.
-                    StringFormat drawFormat = new StringFormat();
+                    var drawFormat = new StringFormat();
 
                     // Draw string to screen.
                     g.DrawString(drawString, drawFont, drawBrush, x * cellSize, y * cellSize);
-
                 }
             }
-                ThrowDice();
+
+            ThrowDice();
             Render();
         }
 
-        private void  ThrowDice()
+        private void ThrowDice()
         {
             Task.Factory.StartNew(async () =>
             {
@@ -85,22 +87,24 @@ namespace Chess2
                     pb.Image = new Bitmap(50, 50);
                     pb.Refresh();
                 }
+
                 await Task.Delay(500);
                 pictureBox1.Image = new Bitmap(SelectFigureImage(RandomFigure()), new Size(50, 50));
                 pictureBox1.Refresh();
                 await Task.Delay(500);
                 pictureBox2.Image = new Bitmap(SelectFigureImage(RandomFigure()), new Size(50, 50));
-                pictureBox2.Refresh(); 
+                pictureBox2.Refresh();
                 await Task.Delay(500);
                 pictureBox3.Image = new Bitmap(SelectFigureImage(RandomFigure()), new Size(50, 50));
                 pictureBox3.Refresh();
             });
         }
+
         private char RandomFigure()
         {
-            char fig = '\0';
+            var fig = '\0';
             random = new Random();
-            switch (random.Next(0,6))
+            switch (random.Next(0, 6))
             {
                 case 0:
                     fig = 'P';
@@ -121,8 +125,10 @@ namespace Chess2
                     fig = 'K';
                     break;
             }
+
             return !Turn ? char.ToLower(fig) : fig;
         }
+
         private void Render()
         {
             ParseFEN();
@@ -130,32 +136,31 @@ namespace Chess2
             label1.Text = Turn ? "Ход белых" : "Ход чёрных";
 
             g.Clear(Color.White);
-            g.DrawImage(boardBitmap,0,0);
+            g.DrawImage(boardBitmap, 0, 0);
 
-            for (int i = 0; i < 8; i++)
+            for (var i = 0; i < 8; i++)
+            for (var j = 0; j < 8; j++)
             {
-                for (int j = 0; j < 8; j++)
-                {
-                    var figureImage = SelectFigureImage(board[j, i]);
+                var figureImage = SelectFigureImage(board[j, i]);
 
-                    g.DrawImage(figureImage, i * cellSize, j * cellSize, cellSize, cellSize);
-                    
-                }
+                g.DrawImage(figureImage, i * cellSize, j * cellSize, cellSize, cellSize);
             }
+
             pb1.Refresh();
             GC.Collect();
         }
+
         public static string getBetween(string strSource, string strStart, string strEnd)
         {
             if (!strSource.Contains(strStart) || !strSource.Contains(strEnd)) return "";
             var Start = strSource.IndexOf(strStart, 0) + strStart.Length;
             var End = strSource.IndexOf(strEnd, Start);
             return strSource.Substring(Start, End - Start);
-
         }
+
         private void Output(object sender, DataReceivedEventArgs e)
         {
-            Console += "\r\n"+e.Data;
+            Console += "\r\n" + e.Data;
             textBox2.Text = cbMovesConsole.Checked ? Moves : Console;
             if (e.Data.Contains("Fen:"))
             {
@@ -166,34 +171,27 @@ namespace Chess2
             if (cbEval.Checked)
             {
                 if (e.Data.Contains("mate"))
-                {
                     try
                     {
-
-                        label3.Text = "#"+Convert.ToInt32(getBetween(e.Data, "mate", "nodes"));
+                        label3.Text = "#" + Convert.ToInt32(getBetween(e.Data, "mate", "nodes"));
                     }
                     catch (Exception exception)
                     {
                         // ignored
                     }
-
-                }
                 else if (e.Data.Contains("cp"))
-                {
                     try
                     {
-
                         label3.Text = (Convert.ToDouble(getBetween(e.Data, "cp", "nodes")) / 100).ToString();
                     }
                     catch (Exception exception)
                     {
                         // ignored
                     }
-                }
             }
 
-                if (e.Data.Contains("bestmove ")&&cbEngine.Checked) {
-
+            if (e.Data.Contains("bestmove ") && cbEngine.Checked)
+            {
                 var move = e.Data.Split();
                 Send("position fen " + FEN + " moves " + move[1]);
                 if (Turn)
@@ -201,23 +199,20 @@ namespace Chess2
                     Moves += "\r\n" + moveid + ". ";
                     moveid++;
                 }
+
                 Moves += move[1] + " ";
                 Send("d");
                 textBox3.Enabled = true;
                 textBox2.Text = cbMovesConsole.Checked ? Moves : Console;
-
             }
         }
 
         private Bitmap SelectFigureImage(char enumChess)
         {
             var point = new Point();
-            
-            Enum.TryParse(enumChess.ToString(),out Figure figure); 
-            if (enumChess == '\0')
-            {
-                figure = Figure.Null;
-            }
+
+            Enum.TryParse(enumChess.ToString(), out Figure figure);
+            if (enumChess == '\0') figure = Figure.Null;
             switch (figure)
             {
                 case Figure.P:
@@ -271,11 +266,13 @@ namespace Chess2
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.DrawImage(new Bitmap(@"cp.png"), 0, 0, section, GraphicsUnit.Pixel);
             }
+
             return bitmap;
         }
+
         private void TB1_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar==(char)Keys.Enter)
+            if (e.KeyChar == (char) Keys.Enter)
             {
                 Send(textBox1.Text);
                 e.Handled = true;
@@ -287,14 +284,13 @@ namespace Chess2
             EngineProcess.Close();
         }
 
-        private int moveid = 1;
         private void textBox3_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar == (char)Keys.Enter)
+            if (e.KeyChar == (char) Keys.Enter)
             {
                 if (textBox3.Text == "")
                 {
-                    if (cbEngine.Checked||cbEval.Checked)
+                    if (cbEngine.Checked || cbEval.Checked)
                     {
                         Send("go depth " + DEPTH);
                         textBox3.Enabled = false;
@@ -304,26 +300,24 @@ namespace Chess2
                 {
                     if (Turn)
                     {
-                        textBox2.Text +="\r\n"+ moveid+". ";
+                        textBox2.Text += "\r\n" + moveid + ". ";
                         moveid++;
                     }
+
                     Moves += textBox3.Text + " ";
 
                     textBox2.Text = cbMovesConsole.Checked ? Moves : Console;
                     Send("position fen " + FEN + " moves " + textBox3.Text);
                     Send("d");
-                    if (cbEngine.Checked||cbEval.Checked)
+                    if (cbEngine.Checked || cbEval.Checked)
                     {
                         Send("go depth " + DEPTH);
-                        if (cbEngine.Checked)
-                        {
-                            textBox3.Enabled = false;
-                        }
+                        if (cbEngine.Checked) textBox3.Enabled = false;
                     }
 
                     textBox3.Text = "";
-
                 }
+
                 e.Handled = true;
             }
         }
@@ -336,7 +330,6 @@ namespace Chess2
 
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
-
             textBox2.Text = cbMovesConsole.Checked ? Moves : Console;
         }
 
@@ -348,15 +341,12 @@ namespace Chess2
 
         private void pb1_MouseClick(object sender, MouseEventArgs e)
         {
-            int x = e.X / cellSize;
-            int y = e.Y / cellSize;
-            char letter = (char)(x + 97);
-            string drawString = letter + (7 - y + 1).ToString();
+            var x = e.X / cellSize;
+            var y = e.Y / cellSize;
+            var letter = (char) (x + 97);
+            var drawString = letter + (7 - y + 1).ToString();
             textBox3.Text += drawString;
-            if (textBox3.Text.Length==4)
-            {
-                textBox3_KeyPress(sender,new KeyPressEventArgs((char) Keys.Enter));
-            }
+            if (textBox3.Text.Length == 4) textBox3_KeyPress(sender, new KeyPressEventArgs((char) Keys.Enter));
         }
 
         private void label1_TextChanged(object sender, EventArgs e)

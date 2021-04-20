@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace Chess2
 {
-    static class Chess
+    internal static class Chess
     {
         public enum Figure : byte
         {
@@ -26,45 +21,38 @@ namespace Chess2
             Null = 0
         }
 
-            public static int DEPTH = 25;
-            public static char[,] board = new char[8,8];
-            public static bool Turn;//true - White, false - Black
-            public static int cellSize { get; set; }
-        
+        public static int DEPTH = 25;
+        public static char[,] board = new char[8, 8];
+        public static bool Turn; //true - White, false - Black
+        public static int cellSize { get; set; }
+
         //  rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 //
         public static string FEN { get; set; } = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        public static string ChessAppDir { get; set; }
+        public static string EngineName { get; set; }
+        public static string ChessGUIName { get; set; }
+        public static Process EngineProcess { get; set; }
 
         public static void ParseFEN()
         {
             board = new char[8, 8];
             var fenSplit = FEN.Split(' ');
             var pieces = fenSplit[0].Split('/');
-            int boardline=0;
+            var boardline = 0;
             foreach (var line in pieces)
             {
-                int index=0;
-                for (int i = 0; i < line.Length; i++)
-                {
+                var index = 0;
+                for (var i = 0; i < line.Length; i++)
                     if (char.IsDigit(line[i]))
-                    {
-                        index += line[i]-49;
-                    }
+                        index += line[i] - 49;
                     else
-                    {
-                        board[boardline,i+index] = line[i];
-                    }
-                }
+                        board[boardline, i + index] = line[i];
 
                 boardline++;
             }
 
             Turn = fenSplit[1] == "w";
-
         }
-        public static string ChessAppDir { get; set; }
-        public static string EngineName { get; set; }
-        public static string ChessGUIName { get; set; }
-        public static Process EngineProcess { get; set; }
 
         public static void Send(string cmd)
         {
