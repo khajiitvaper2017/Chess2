@@ -173,7 +173,10 @@ namespace Chess2
                 if (e.Data.Contains("mate"))
                     try
                     {
-                        label3.Text = "#" + Convert.ToInt32(getBetween(e.Data, "mate", "nodes"));
+                        if (Turn)
+                            label3.Text = "#" + Convert.ToInt32(getBetween(e.Data, "mate", "nodes"));
+                        else
+                            label3.Text = "#" + Convert.ToInt32(getBetween(e.Data, "mate", "nodes")) * -1;
                     }
                     catch (Exception exception)
                     {
@@ -182,7 +185,10 @@ namespace Chess2
                 else if (e.Data.Contains("cp"))
                     try
                     {
-                        label3.Text = (Convert.ToDouble(getBetween(e.Data, "cp", "nodes")) / 100).ToString();
+                        if (Turn)
+                            label3.Text = (Convert.ToDouble(getBetween(e.Data, "cp", "nodes")) / 100).ToString();
+                        else
+                            label3.Text = (Convert.ToDouble(getBetween(e.Data, "cp", "nodes")) / 100 * -1).ToString();
                     }
                     catch (Exception exception)
                     {
@@ -300,7 +306,7 @@ namespace Chess2
                 {
                     if (Turn)
                     {
-                        textBox2.Text += "\r\n" + moveid + ". ";
+                        Moves += "\r\n" + moveid + ". ";
                         moveid++;
                     }
 
@@ -344,11 +350,40 @@ namespace Chess2
             var x = e.X / cellSize;
             var y = e.Y / cellSize;
             var letter = (char) (x + 97);
-            var drawString = letter + (7 - y + 1).ToString();
+            var drawString = letter + (8 - y).ToString();
             textBox3.Text += drawString;
-            if (textBox3.Text.Length == 4) textBox3_KeyPress(sender, new KeyPressEventArgs((char) Keys.Enter));
+            if (textBox3.Text.Length == 4)
+            {
+                if (Turn)
+                {
+                    if (textBox3.Text[1] == '7' && textBox3.Text[3] == '8' &&
+                        board[8 - Convert.ToInt32(textBox3.Text[1].ToString()), CharToNumber(textBox3.Text[0])] == 'P')
+                    {
+                        var form2 = new Form2();
+                        form2.ShowDialog();
+                        textBox3.Text += form2.Figure;
+                    }
+                }
+                else
+                {
+                    if (textBox3.Text[1] == '2' && textBox3.Text[3] == '1' &&
+                        board[8-Convert.ToInt32(textBox3.Text[1].ToString()), CharToNumber(textBox3.Text[0])] == 'p')
+                    {
+                        var form2 = new Form2();
+                        form2.ShowDialog();
+                        textBox3.Text += form2.Figure;
+                    }
+                }
+            }
+
+            if (textBox3.Text.Length == 4 || textBox3.Text.Length == 5)
+                textBox3_KeyPress(sender, new KeyPressEventArgs((char) Keys.Enter));
         }
 
+        private int CharToNumber(char ch)
+        {
+            return ch - 97;
+        }
         private void label1_TextChanged(object sender, EventArgs e)
         {
             ThrowDice();

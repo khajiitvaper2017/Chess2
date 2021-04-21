@@ -2,7 +2,7 @@
 
 namespace Chess2
 {
-    internal static class Chess
+    public static class Chess
     {
         public enum Figure : byte
         {
